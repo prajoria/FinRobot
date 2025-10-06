@@ -1,6 +1,10 @@
 OAI_CONFIG_LIST
 PERSONAL_KEYS
 config_api_keys
+# Environment files
+.env
+.env.*
+!.env.example
 __pycache__/
 .ipynb_checkpoints/
 .cache/
