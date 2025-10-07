@@ -68,7 +68,7 @@ def setup_finrobot_with_fmp():
     """Setup FinRobot with FMP data integration"""
     
     # Load Azure OpenAI configuration
-    config_list = autogen.config_list_from_json("OAI_CONFIG_LIST")
+    config_list = autogen.config_list_from_json("../OAI_CONFIG_LIST")
     
     # Initialize FMP data provider
     fmp = FMPDataProvider()

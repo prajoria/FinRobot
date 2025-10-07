@@ -1,5 +1,9 @@
 {
     "python.analysis.extraPaths": [
         "./FinNLP"
-    ]
+    ],
+    "python.defaultInterpreterPath": "./finrobot_env/bin/python",
+    "python.venvPath": "./finrobot_env",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true
 }

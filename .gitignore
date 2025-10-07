@@ -1,6 +1,7 @@
 OAI_CONFIG_LIST
 PERSONAL_KEYS
 config_api_keys
+finrobot_env/
 # Environment files
 .env
 .env.*
@@ -19,3 +20,4 @@ projects/
 dist/
 tmp/
 filings/
+report/

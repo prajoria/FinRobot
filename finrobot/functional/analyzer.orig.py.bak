@@ -1,10 +1,8 @@
 import os
-import pandas as pd
 from textwrap import dedent
 from typing import Annotated, List
 from datetime import timedelta, datetime
-from ..data_source import SECUtils, FMPUtils
-from ..data_source.fmp_client import FMPClient
+from ..data_source import YFinanceUtils, SECUtils, FMPUtils
 
 
 def combine_prompt(instruction, resource, table_str=None):
@@ -23,14 +21,6 @@ def save_to_file(data: str, file_path: str):
 
 class ReportAnalysisUtils:
 
-    @staticmethod
-    def _get_fmp_client():
-        """Initialize and return FMP client"""
-        api_key = os.getenv('FMP_API_KEY')
-        if not api_key:
-            raise ValueError("FMP_API_KEY environment variable not set")
-        return FMPClient(api_key)
-
     def analyze_income_stmt(
         ticker_symbol: Annotated[str, "ticker symbol"],
         fyear: Annotated[str, "fiscal year of the 10-K report"],
@@ -40,10 +30,8 @@ class ReportAnalysisUtils:
         Retrieve the income statement for the given ticker symbol with the related section of its 10-K report.
         Then return with an instruction on how to analyze the income statement.
         """
-        # Retrieve the income statement using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        income_stmt_data = fmp_client.get_income_statement(ticker_symbol, period="annual", limit=5)
-        income_stmt = fmp_client.to_dataframe(income_stmt_data)
+        # Retrieve the income statement
+        income_stmt = YFinanceUtils.get_income_stmt(ticker_symbol)
         df_string = "Income statement:\n" + income_stmt.to_string().strip()
 
         # Analysis instruction
@@ -80,10 +68,7 @@ class ReportAnalysisUtils:
         Retrieve the balance sheet for the given ticker symbol with the related section of its 10-K report.
         Then return with an instruction on how to analyze the balance sheet.
         """
-        # Retrieve the balance sheet using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        balance_sheet_data = fmp_client.get_balance_sheet(ticker_symbol, period="annual", limit=5)
-        balance_sheet = fmp_client.to_dataframe(balance_sheet_data)
+        balance_sheet = YFinanceUtils.get_balance_sheet(ticker_symbol)
         df_string = "Balance sheet:\n" + balance_sheet.to_string().strip()
 
         instruction = dedent(
@@ -112,10 +97,7 @@ class ReportAnalysisUtils:
         Retrieve the cash flow statement for the given ticker symbol with the related section of its 10-K report.
         Then return with an instruction on how to analyze the cash flow statement.
         """
-        # Retrieve the cash flow statement using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        cash_flow_data = fmp_client.get_cash_flow_statement(ticker_symbol, period="annual", limit=5)
-        cash_flow = fmp_client.to_dataframe(cash_flow_data)
+        cash_flow = YFinanceUtils.get_cash_flow(ticker_symbol)
         df_string = "Cash flow statement:\n" + cash_flow.to_string().strip()
 
         instruction = dedent(
@@ -144,10 +126,7 @@ class ReportAnalysisUtils:
         Retrieve the income statement and the related section of its 10-K report for the given ticker symbol.
         Then return with an instruction on how to create a segment analysis.
         """
-        # Retrieve the income statement using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        income_stmt_data = fmp_client.get_income_statement(ticker_symbol, period="annual", limit=5)
-        income_stmt = fmp_client.to_dataframe(income_stmt_data)
+        income_stmt = YFinanceUtils.get_income_stmt(ticker_symbol)
         df_string = (
             "Income statement (Segment Analysis):\n" + income_stmt.to_string().strip()
         )
@@ -213,10 +192,7 @@ class ReportAnalysisUtils:
         Retrieve the risk factors for the given ticker symbol with the related section of its 10-K report.
         Then return with an instruction on how to summarize the top 3 key risks of the company.
         """
-        # Get company name using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        company_profile_data = fmp_client.get_company_profile(ticker_symbol)
-        company_name = company_profile_data[0].get("companyName", "N/A") if company_profile_data else "N/A"
+        company_name = YFinanceUtils.get_stock_info(ticker_symbol)["shortName"]
         risk_factors = SECUtils.get_10k_section(ticker_symbol, fyear, "1A")
         section_text = (
             "Company Name: "
@@ -494,24 +470,11 @@ class ReportAnalysisUtils:
         start = (filing_date - timedelta(weeks=52)).strftime("%Y-%m-%d")
         end = filing_date.strftime("%Y-%m-%d")
 
-        # Fetch historical market data using FMP client
-        fmp_client = ReportAnalysisUtils._get_fmp_client()
-        hist_data = fmp_client.get_historical_prices(ticker_symbol, from_date=start, to_date=end)
-        hist = fmp_client.to_dataframe(hist_data)
-        
-        # Set date as index for pandas operations
-        if not hist.empty and 'date' in hist.columns:
-            hist['date'] = pd.to_datetime(hist['date'])
-            hist.set_index('date', inplace=True)
+        hist = YFinanceUtils.get_stock_data(ticker_symbol, start, end)
 
-        # Get company profile for basic info
-        company_profile_data = fmp_client.get_company_profile(ticker_symbol)
-        company_profile = company_profile_data[0] if company_profile_data else {}
-        
-        # Get current quote for latest price info
-        quote_data = fmp_client.get_quote(ticker_symbol)
-        close_price = quote_data.get('price', 0) if quote_data else 0
-        currency = 'USD'  # FMP typically returns USD prices
+        # 获取其他相关信息
+        info = YFinanceUtils.get_stock_info(ticker_symbol)
+        close_price = hist["Close"].iloc[-1]
 
         # Calculate the average daily trading volume
         six_months_start = (filing_date - timedelta(weeks=26)).strftime("%Y-%m-%d")
@@ -534,24 +497,24 @@ class ReportAnalysisUtils:
         # convert back to str for function calling
         filing_date = filing_date.strftime("%Y-%m-%d")
 
-        # Note: YFinanceUtils.get_analyst_recommendations has no FMP equivalent, leaving unchanged
-        # rating, _ = YFinanceUtils.get_analyst_recommendations(ticker_symbol)
-        rating = "N/A"  # No FMP equivalent available
+        # Print the result
+        # print(f"Over the past 6 months, the average daily trading volume for {ticker_symbol} was: {avg_daily_volume_6m:.2f}")
+        rating, _ = YFinanceUtils.get_analyst_recommendations(ticker_symbol)
         target_price = FMPUtils.get_target_price(ticker_symbol, filing_date)
         result = {
             "Rating": rating,
             "Target Price": target_price,
-            f"6m avg daily vol ({currency}mn)": "{:.2f}".format(
+            f"6m avg daily vol ({info['currency']}mn)": "{:.2f}".format(
                 avg_daily_volume_6m / 1e6
             ),
-            f"Closing Price ({currency})": "{:.2f}".format(close_price),
-            f"Market Cap ({currency}mn)": "{:.2f}".format(
+            f"Closing Price ({info['currency']})": "{:.2f}".format(close_price),
+            f"Market Cap ({info['currency']}mn)": "{:.2f}".format(
                 FMPUtils.get_historical_market_cap(ticker_symbol, filing_date) / 1e6
             ),
-            f"52 Week Price Range ({currency})": "{:.2f} - {:.2f}".format(
+            f"52 Week Price Range ({info['currency']})": "{:.2f} - {:.2f}".format(
                 fiftyTwoWeekLow, fiftyTwoWeekHigh
             ),
-            f"BVPS ({currency})": "{:.2f}".format(
+            f"BVPS ({info['currency']})": "{:.2f}".format(
                 FMPUtils.get_historical_bvps(ticker_symbol, filing_date)
             ),
         }
