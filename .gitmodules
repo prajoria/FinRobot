@@ -1,9 +1,6 @@
 [submodule "FinNLP"]
 	path = FinNLP
 	url = https://github.com/AI4Finance-Foundation/FinNLP.git
-[submodule "external/sec-edgar"]
-	path = external/sec-edgar
-	url = https://github.com/prajoria/sec-edgar.git
 [submodule "external/edgartools"]
 	path = external/edgartools
 	url = https://github.com/prajoria/edgartools.git
