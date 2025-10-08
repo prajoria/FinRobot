@@ -43,6 +43,25 @@ python examples/test_sec_edgar.py
 python examples/sec_edgar_fetcher.py
 ```
 
+## Important Import Notes
+
+**CIK Lookup Import**: The `CIKLookup` class must be imported directly from the cik_lookup module:
+```python
+from secedgar.cik_lookup import CIKLookup  # Correct
+# NOT: from secedgar import CIKLookup  # This will fail
+```
+
+**Complete Import Setup**:
+```python
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'external', 'sec-edgar'))
+
+from secedgar import filings, FilingType, CompanyFilings
+from secedgar.cik_lookup import CIKLookup
+from secedgar.client import NetworkClient
+```
+
 ## Usage Examples
 
 ### Basic Company Filing Fetch
@@ -53,6 +72,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'external', 'sec-edgar'))
 
 from secedgar import filings, FilingType
+from secedgar.cik_lookup import CIKLookup
 from datetime import date
 
 # Fetch Apple's recent 10-K annual reports

@@ -18,7 +18,16 @@ echo "✅ Found sec-edgar submodule"
 # Install sec-edgar and dependencies
 echo "📦 Installing sec-edgar and dependencies..."
 
+# First install the core dependencies
+echo "📦 Installing core dependencies..."
+pip install beautifulsoup4 aiohttp urllib3 requests lxml tqdm
+
+# Install nest-asyncio for Jupyter compatibility
+echo "📦 Installing Jupyter compatibility..."
+pip install nest-asyncio
+
 # Option 1: Install from the submodule (development version)
+echo "📦 Installing sec-edgar from submodule..."
 cd external/sec-edgar
 pip install -e .
 cd ../..
@@ -26,10 +35,9 @@ cd ../..
 # Option 2: Alternative - install from PyPI (stable version)
 # pip install secedgar
 
-# Install additional dependencies
-echo "📦 Installing additional dependencies..."
-pip install nest-asyncio  # For Jupyter compatibility
-pip install beautifulsoup4 aiohttp urllib3 requests lxml tqdm
+# Install additional dependencies (if not already installed)
+echo "📦 Verifying additional dependencies..."
+pip install --upgrade beautifulsoup4 aiohttp urllib3 requests lxml tqdm nest-asyncio
 
 echo "✅ Installation complete!"
 

@@ -25,7 +25,8 @@ def test_sec_edgar_basic():
         # Test imports
         print("📦 Testing imports...")
         import secedgar
-        from secedgar import FilingType, CIKLookup
+        from secedgar import FilingType
+        from secedgar.cik_lookup import CIKLookup
         
         print(f"✅ secedgar version: {secedgar.__version__}")
         print(f"✅ FilingType imported: {FilingType.FILING_10K}")

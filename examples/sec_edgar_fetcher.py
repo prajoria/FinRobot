@@ -21,7 +21,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'external', 'sec-edgar'))
 
 # Import sec-edgar modules
-from secedgar import filings, FilingType, CompanyFilings, CIKLookup
+from secedgar import filings, FilingType, CompanyFilings
+from secedgar.cik_lookup import CIKLookup
 from secedgar.client import NetworkClient
 
 # For Jupyter Notebook compatibility
