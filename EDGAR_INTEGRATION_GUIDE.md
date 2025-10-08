@@ -1,22 +1,13 @@
-# Dual SEC EDGAR Integration for FinRobot
+````markdown
+# SEC EDGAR Integration for FinRobot
 
-FinRobot now includes **two powerful SEC EDGAR libraries** to provide comprehensive access to SEC filings and financial data:
+FinRobot includes **edgartools** - a modern, powerful SEC EDGAR library that provides comprehensive access to SEC filings and financial data with a clean Python API.
 
-## 📚 Available Libraries
+## 📚 Available Library
 
-### 1. **sec-edgar** - Bulk Filing Downloads
-**Location**: `external/sec-edgar/`  
-**Best for**: Downloading large numbers of filings, historical data collection
-
-**Key Features**:
-- Bulk download of 10-K, 10-Q, 8-K filings
-- Historical filing retrieval
-- Multiple companies at once
-- File-based storage
-
-### 2. **edgartools** - Modern API & Data Analysis  
+### **edgartools** - Modern SEC Data API & Analysis  
 **Location**: `external/edgartools/`  
-**Best for**: Real-time data access, financial analysis, AI/LLM integration
+**Best for**: Real-time data access, financial analysis, AI/LLM integration, bulk downloads
 
 **Key Features**:
 - Clean Python API with pandas integration
@@ -25,40 +16,21 @@ FinRobot now includes **two powerful SEC EDGAR libraries** to provide comprehens
 - LLM-ready text extraction
 - Insider trading data
 - Fund holdings analysis
+- Bulk filing downloads
+- Historical data collection (1994+)
 
 ## 🚀 Quick Start Guide
 
-### Setup Both Libraries
+### Setup EdgarTools
 
 ```bash
-# Run the existing setup for sec-edgar
-./setup_sec_edgar.sh
-
 # Install edgartools
 cd external/edgartools
 pip install -e .
 cd ../..
-```
 
-### Using sec-edgar for Bulk Downloads
-
-```python
-import sys
-import os
-sys.path.insert(0, './external/sec-edgar')
-
-from secedgar import filings, FilingType
-from datetime import date
-
-# Download recent 10-K filings for tech companies
-tech_companies = ["AAPL", "MSFT", "AMZN", "NVDA"]
-my_filings = filings(
-    cik_lookup=tech_companies,
-    filing_type=FilingType.FILING_10K,
-    start_date=date(2022, 1, 1),
-    user_agent="FinRobot Analysis (support@finrobot.ai)"
-)
-my_filings.save('./sec_filings/bulk_10k')
+# Set up environment variables
+echo 'SEC_IDENTITY="Your Name your.email@domain.com"' >> .env
 ```
 
 ### Using edgartools for Financial Analysis
@@ -69,9 +41,13 @@ import os
 sys.path.insert(0, './external/edgartools')
 
 from edgar import *
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Set identity (required by SEC)
-set_identity("your.email@domain.com")
+set_identity(os.getenv('SEC_IDENTITY'))
 
 # Get Apple's latest financials in one line
 company = Company("AAPL")
@@ -85,29 +61,32 @@ cash_flow = financials.cash_flow()
 print(income_statement.head())
 ```
 
-## 💡 Recommended Usage Patterns
-
-### For Historical Research & Bulk Analysis
-Use **sec-edgar** when you need to:
-- Download filings for multiple years
-- Collect data for large company sets
-- Perform historical trend analysis
-- Store filings locally for offline processing
+### Bulk Filing Downloads with edgartools
 
 ```python
-# Example: Download 5 years of quarterly reports for S&P 500 companies
-sp500_companies = ["AAPL", "MSFT", "AMZN", "GOOGL", "TSLA", ...]
-quarterly_filings = filings(
-    cik_lookup=sp500_companies,
-    filing_type=FilingType.FILING_10Q,
-    start_date=date(2019, 1, 1),
-    user_agent="FinRobot Historical Analysis"
-)
-quarterly_filings.save('./historical_research')
+from edgar import *
+from dotenv import load_dotenv
+
+load_dotenv()
+set_identity(os.getenv('SEC_IDENTITY'))
+
+# Download recent 10-K filings for tech companies
+tech_companies = ["AAPL", "MSFT", "AMZN", "NVDA"]
+
+for ticker in tech_companies:
+    company = Company(ticker)
+    # Get all 10-K filings from the last 3 years
+    filings = company.get_filings(form="10-K", since=2021)
+    
+    # Download each filing
+    for filing in filings:
+        filing.download(path=f"./sec_filings/{ticker}/")
 ```
 
+## 💡 Recommended Usage Patterns
+
 ### For Real-time Analysis & AI Integration
-Use **edgartools** when you need to:
+Use **edgartools** for:
 - Access latest financial data quickly
 - Integrate with pandas/numpy workflows
 - Prepare data for LLM analysis
@@ -135,26 +114,38 @@ for ticker in companies:
 df = pd.DataFrame(comparison_data)
 ```
 
-## 🔄 Integration with FinRobot Analysis
-
-### Combined Workflow Example
+### For Historical Research & Bulk Analysis
+Use **edgartools** for:
+- Download filings for multiple years
+- Collect data for large company sets
+- Perform historical trend analysis
+- Store filings locally for offline processing
 
 ```python
-# Step 1: Use sec-edgar for bulk historical downloads
-from secedgar import filings, FilingType
+# Example: Download 5 years of quarterly reports for analysis
+companies = ["AAPL", "MSFT", "AMZN", "GOOGL", "TSLA"]
 
-# Download 3 years of filings
-historical_filings = filings(
-    cik_lookup=["AAPL", "MSFT"],
-    filing_type=FilingType.FILING_10K,
-    start_date=date(2021, 1, 1),
-    user_agent="FinRobot Combined Analysis"
-)
-historical_filings.save('./analysis_data/historical')
+for ticker in companies:
+    company = Company(ticker)
+    # Get quarterly filings from last 5 years
+    quarterly_filings = company.get_filings(form="10-Q", since=2019)
+    
+    # Download and organize
+    for filing in quarterly_filings:
+        filing.download(path=f"./historical_research/{ticker}/quarterly/")
+```
 
-# Step 2: Use edgartools for latest financial data
+## 🔄 Integration with FinRobot Analysis
+
+### Streamlined Workflow Example
+
+```python
+# Use edgartools for comprehensive SEC data access
 from edgar import *
-set_identity("analyst@finrobot.ai")
+from dotenv import load_dotenv
+
+load_dotenv()
+set_identity(os.getenv('SEC_IDENTITY'))
 
 for ticker in ["AAPL", "MSFT"]:
     company = Company(ticker)
@@ -174,47 +165,48 @@ for ticker in ["AAPL", "MSFT"]:
     )
 ```
 
-## 📊 Feature Comparison
+## 📊 EdgarTools Features
 
-| Feature | sec-edgar | edgartools |
-|---------|-----------|------------|
-| **Bulk Downloads** | ✅ Excellent | ❌ Not designed for this |
-| **Real-time Access** | ❌ Complex | ✅ Excellent |
-| **Financial Data Parsing** | ❌ Raw files only | ✅ Automatic parsing |
-| **Pandas Integration** | ❌ Manual | ✅ Built-in |
-| **Historical Coverage** | ✅ 1994+ | ✅ 1994+ |
-| **Rate Limiting** | ⚠️ Manual handling | ✅ Automatic |
-| **XBRL Support** | ❌ No | ✅ Yes |
-| **LLM Integration** | ⚠️ Text processing needed | ✅ LLM-ready |
-| **Learning Curve** | ⚠️ Moderate | ✅ Easy |
+| Feature | Support |
+|---------|---------|
+| **Bulk Downloads** | ✅ Excellent |
+| **Real-time Access** | ✅ Excellent |
+| **Financial Data Parsing** | ✅ Automatic parsing |
+| **Pandas Integration** | ✅ Built-in |
+| **Historical Coverage** | ✅ 1994+ |
+| **Rate Limiting** | ✅ Automatic |
+| **XBRL Support** | ✅ Yes |
+| **LLM Integration** | ✅ LLM-ready |
+| **Learning Curve** | ✅ Easy |
+| **Environment Variables** | ✅ .env support |
 
 ## 🛠️ Setup Instructions
 
-### Quick Setup for Both Libraries
+### Quick Setup
 
-1. **Install sec-edgar dependencies**:
-   ```bash
-   ./setup_sec_edgar.sh
-   ```
-
-2. **Install edgartools**:
+1. **Install edgartools**:
    ```bash
    cd external/edgartools
    pip install -e .
    cd ../..
    ```
 
-3. **Test both libraries**:
+2. **Configure environment**:
    ```bash
-   python examples/quick_sec_test.py  # Test sec-edgar
-   python examples/test_edgartools.py  # Test edgartools (to be created)
+   echo 'SEC_IDENTITY="Your Name your.email@domain.com"' >> .env
+   ```
+
+3. **Test the library**:
+   ```bash
+   python examples/test_edgartools.py
    ```
 
 ## 📈 Next Steps
 
-1. **Choose the right tool** for your specific use case
-2. **Combine both libraries** for comprehensive SEC data analysis
-3. **Integrate with FinRobot's AI agents** for automated financial analysis
-4. **Build custom workflows** that leverage the strengths of both libraries
+1. **Explore the edgartools notebooks** in `external/edgartools/notebooks/`
+2. **Integrate with FinRobot's AI agents** for automated financial analysis
+3. **Build custom workflows** leveraging edgartools' comprehensive SEC data access
+4. **Use environment variables** for secure credential management
 
-The dual integration provides the best of both worlds: powerful bulk data collection with sec-edgar and modern, AI-ready analysis capabilities with edgartools! 🎉
+EdgarTools provides a modern, comprehensive solution for SEC data access with excellent Python integration! 🎉
+````
