@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'external', 'se
 # Import sec-edgar modules
 from secedgar import filings, FilingType, CompanyFilings
 from secedgar.cik_lookup import CIKLookup
-from secedgar.client import NetworkClient
 
 # For Jupyter Notebook compatibility
 try:
@@ -309,13 +308,6 @@ def main():
     
     print(f"\n🎯 Target Companies: {', '.join(tech_tickers)}")
     print(f"🎯 Target ETFs: {', '.join(etf_tickers)}")
-    
-    # Look up CIK numbers
-    cik_results = fetcher.lookup_ciks(all_tickers)
-    
-    if not cik_results:
-        print("❌ Could not lookup CIK numbers. Exiting.")
-        return
     
     # Example 1: Get recent 10-K filings for tech companies
     print("\n" + "="*50)
