@@ -1,3 +1,10 @@
 [submodule "FinNLP"]
 	path = FinNLP
 	url = https://github.com/AI4Finance-Foundation/FinNLP.git
+[submodule "external/edgartools"]
+	path = external/edgartools
+	url = https://github.com/prajoria/edgartools.git
+[submodule "external/fmp-py"]
+	path = external/fmp-py
+	url = https://github.com/prajoria/fmp-py.git
+	branch = fmp_caching

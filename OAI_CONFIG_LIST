@@ -1,9 +1,0 @@
-[
-    {
-        "model": "gpt-4o",
-        "api_key": "YOUR_AZURE_OPENAI_API_KEY",
-        "base_url": "https://mastersaifoundry.openai.azure.com/",
-        "api_type": "azure",
-        "api_version": "2024-12-01-preview"
-    }
-]
